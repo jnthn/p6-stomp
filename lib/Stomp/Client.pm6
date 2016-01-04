@@ -24,14 +24,13 @@ class Stomp::Client {
                 .grep(*.command eq 'CONNECTED')
                 .head(1)
                 .Promise;
-            await $conn.print: qq:to/FRAME/;
-                CONNECT
-                accept-version:1.2
-                login:$!login
-                passcode:$!password
-
-                \0
-                FRAME
+            await $conn.print: Stomp::Message.new:
+                command => 'CONNECT',
+                headers => (
+                    accept-version => '1.2',
+                    login => $!login,
+                    passcode => $!password
+                );
             await $connected;
             $!connection = $conn;
 
@@ -45,13 +44,13 @@ class Stomp::Client {
 
     method send($topic, $body) {
         self!ensure-connected;
-        $!connection.print: qq:to/FRAME/;
-            SEND
-            destination:/queue/$topic
-            content-type:text/plain
-
-            $body\0
-            FRAME
+        $!connection.print: Stomp::Message.new:
+            command => 'SEND',
+            headers => (
+                destination  => "/queue/$topic",
+                content-type => "text/plain"
+            ),
+            body => $body;
     }
 
     method subscribe($topic) {
@@ -60,13 +59,12 @@ class Stomp::Client {
         supply {
             my $id = $next-id++;
 
-            $!connection.print: qq:to/FRAME/;
-                SUBSCRIBE
-                destination:/queue/$topic
-                id:$id
-
-                \0
-                FRAME
+            $!connection.print: Stomp::Message.new:
+                command => 'SUBSCRIBE',
+                headers => (
+                    destination => "/queue/$topic",
+                    id => $id
+                );
 
             whenever $!incoming {
                 if .command eq 'MESSAGE' && .headers<subscription> == $id {
