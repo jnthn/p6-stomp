@@ -21,7 +21,7 @@ class Stomp::Client {
 
     method connect() {
         start {
-            my $conn = await IO::Socket::Async.connect($!host, $!port);
+            my $conn = await self.socket-provider.connect($!host, $!port);
             $!incoming = self!process-messages($conn.Supply).share;
 
             my $connected = $!incoming
@@ -41,6 +41,10 @@ class Stomp::Client {
 
             True
         }
+    }
+
+    method socket-provider() {
+        IO::Socket::Async
     }
 
     method send($topic, $body) {
