@@ -1,5 +1,5 @@
 class Stomp::Message {
-    has $.command;
+    has $.command is required;
     has %.headers;
     has $.body;
 
