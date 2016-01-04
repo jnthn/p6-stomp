@@ -1,3 +1,5 @@
+use Stomp::Message;
+
 role X::Stomp::Client is Exception { }
 class X::Stomp::Client::NotConnected does X::Stomp::Client {
     method message() {
@@ -12,12 +14,6 @@ class Stomp::Client {
     has Str $.password = 'guest';
     has $!connection;
     has $!incoming;
-
-    my class Message {
-        has $.command;
-        has %.headers;
-        has $.body;
-    }
 
     method connect() {
         start {
@@ -121,7 +117,7 @@ class Stomp::Client {
                         die ~$<body>;
                     }
                     else {
-                        emit Message.new(
+                        emit Stomp::Message.new(
                             command => ~$<command>,
                             headers => $<header>
                                 .map({ ~.<header-name> => ~.<header-value> })
