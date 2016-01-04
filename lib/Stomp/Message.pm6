@@ -1,7 +1,7 @@
 class Stomp::Message {
     has $.command is required;
     has %.headers;
-    has $.body;
+    has $.body = '';
 
     method Str() {
         qq:to/END/
