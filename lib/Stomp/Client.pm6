@@ -1,4 +1,5 @@
 use Stomp::Message;
+use Stomp::Parser;
 
 role X::Stomp::Client is Exception { }
 class X::Stomp::Client::NotConnected does X::Stomp::Client {
@@ -80,36 +81,11 @@ class Stomp::Client {
     }
 
     method !process-messages($incoming) {
-        my grammar StompMessage {
-            token TOP {
-                <command> \n
-                [<header> \n]*
-                \n
-                <body>
-                \n*
-            }
-            token command {
-                < CONNECTED MESSAGE RECEIPT ERROR >
-            }
-            token header {
-                <header-name> ":" <header-value>
-            }
-            token header-name {
-                <-[:\r\n]>+
-            }
-            token header-value {
-                <-[:\r\n]>*
-            }
-            token body {
-                <-[\x0]>* )> \x0
-            }
-        }
-
         supply {
             my $buffer = '';
             whenever $incoming -> $data {
                 $buffer ~= $data;
-                while StompMessage.subparse($buffer) -> $/ {
+                while Stomp::Parser.subparse($buffer) -> $/ {
                     $buffer .= substr($/.chars);
                     if $<command> eq 'ERROR' {
                         die ~$<body>;
