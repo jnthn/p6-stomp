@@ -7,7 +7,10 @@ grammar Stomp::Parser {
         \n*
     }
     token command {
-        < CONNECTED MESSAGE RECEIPT ERROR >
+        <
+            SEND SUBSCRIBE UNSUBSCRIBE BEGIN COMMIT ABORT ACK NACK
+            DISCONNECT CONNECT STOMP CONNECTED MESSAGE RECEIPT ERROR
+        >
     }
     token header {
         <header-name> ":" <header-value>
@@ -20,5 +23,20 @@ grammar Stomp::Parser {
     }
     token body {
         <-[\x0]>* )> \x0
+    }
+}
+
+grammar Stomp::Parser::ClientCommands is Stomp::Parser {
+    token command {
+        <
+            SEND SUBSCRIBE UNSUBSCRIBE BEGIN COMMIT ABORT ACK NACK
+            DISCONNECT CONNECT STOMP
+        >
+    }
+}
+
+grammar Stomp::Parser::ServerCommands is Stomp::Parser {
+    token command {
+        < CONNECTED MESSAGE RECEIPT ERROR >
     }
 }

@@ -85,7 +85,7 @@ class Stomp::Client {
             my $buffer = '';
             whenever $incoming -> $data {
                 $buffer ~= $data;
-                while Stomp::Parser.subparse($buffer) -> $/ {
+                while Stomp::Parser::ServerCommands.subparse($buffer) -> $/ {
                     $buffer .= substr($/.chars);
                     if $<command> eq 'ERROR' {
                         die ~$<body>;
