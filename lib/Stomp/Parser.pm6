@@ -31,11 +31,12 @@ grammar Stomp::Parser {
         method TOP($/) {
             make Stomp::Message.new(
                 command => ~$<command>,
-                headers => $<header>
-                    .map({ ~.<header-name> => ~.<header-value> })
-                    .hash,
-                body => ~$<body>
+                headers => $<header>.map(*.made),
+                body    => ~$<body>
             );
+        }
+        method header($/) {
+            make ~$<header-name> => ~$<header-value>;
         }
     }
 
