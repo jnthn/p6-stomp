@@ -86,19 +86,11 @@ class Stomp::Client {
             whenever $incoming -> $data {
                 $buffer ~= $data;
                 while Stomp::Parser::ServerCommands.subparse($buffer) -> $/ {
+                    given $/.made -> $message {
+                        die $message.body if $message.command eq 'ERROR';
+                        emit $message;
+                    }
                     $buffer .= substr($/.chars);
-                    if $<command> eq 'ERROR' {
-                        die ~$<body>;
-                    }
-                    else {
-                        emit Stomp::Message.new(
-                            command => ~$<command>,
-                            headers => $<header>
-                                .map({ ~.<header-name> => ~.<header-value> })
-                                .hash,
-                            body => ~$<body>
-                        );
-                    }
                 }
             }
         }
