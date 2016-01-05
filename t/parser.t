@@ -1,7 +1,7 @@
 use Test;
 use Stomp::Parser;
 
-plan 46;
+plan 51;
 
 my @server-commands = < CONNECTED MESSAGE RECEIPT ERROR >;
 my @client-commands = <
@@ -48,4 +48,20 @@ for @client-commands {
 
         \0
         TEST
+}
+
+{
+    my $parsed = Stomp::Parser.parse(qq:to/TEST/);
+        SEND
+        destination:/queue/stuff
+
+        Much wow\0
+        TEST
+    ok $parsed, "Parsed message with header/body";
+
+    my $msg = $parsed.made;
+    isa-ok $msg, Stomp::Message, "Parser made a Stomp::Message";
+    is $msg.command, "SEND", "Command is correct";
+    is $msg.headers, { destination => "/queue/stuff" }, "Header is correct";
+    is $msg.body, "Much wow", "Body is correct";
 }

@@ -1,3 +1,5 @@
+use Stomp::Message;
+
 grammar Stomp::Parser {
     token TOP {
         <command> \n
@@ -24,6 +26,21 @@ grammar Stomp::Parser {
     token body {
         <-[\x0]>* )> \x0
     }
+
+    class Actions {
+        method TOP($/) {
+            make Stomp::Message.new(
+                command => ~$<command>,
+                headers => $<header>
+                    .map({ ~.<header-name> => ~.<header-value> })
+                    .hash,
+                body => ~$<body>
+            );
+        }
+    }
+
+    method parse(|c) { nextwith(actions => Actions, |c); }
+    method subparse(|c) { nextwith(actions => Actions, |c); }
 }
 
 grammar Stomp::Parser::ClientCommands is Stomp::Parser {
