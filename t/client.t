@@ -1,0 +1,66 @@
+use Test;
+use Test::IO::Socket::Async;
+use Stomp::Client;
+
+plan 10;
+
+constant $test-host = 'localhost';
+constant $test-port = 1234;
+constant $test-login = 'user';
+constant $test-password = 'correcthorsebatterystaple';
+
+constant $test-socket = Test::IO::Socket::Async.new;
+my \TestableClient = Stomp::Client but role {
+    method socket-provider() {
+        $test-socket
+    }
+}
+
+{
+    my $client = TestableClient.new(
+        host => $test-host, port => $test-port,
+        login => $test-login, password => $test-password
+    );
+    my $connect-promise = $client.connect();
+    my $test-conn = await $test-socket.connection-made;
+    is $test-conn.host, $test-host, "Connected to the correct host";
+    is $test-conn.port, $test-port, "Connected to the correct port";
+}
+
+{
+    my $client = TestableClient.new(
+        host => $test-host, port => $test-port,
+        login => $test-login, password => $test-password
+    );
+    my $connect-promise = $client.connect();
+    my $test-conn = await $test-socket.connection-made;
+    $test-conn.deny-connection();
+    dies-ok { await $connect-promise },
+        "Failed STOMP server connection breaks connect Promise";
+}
+
+{
+    my $client = TestableClient.new(
+        host => $test-host, port => $test-port,
+        login => $test-login, password => $test-password
+    );
+    my $connect-promise = $client.connect();
+    my $test-conn = await $test-socket.connection-made;
+    $test-conn.accept-connection();
+
+    my $message-text = await $test-conn.sent-data;
+    my $parsed-message = Stomp::Parser.parse($message-text);
+    ok $parsed-message, "Client sent valid message to server";
+    my $message = $parsed-message.made;
+    is $message.command, "CONNECT", "Client sent a CONNECT command";
+    is $message.headers<login>, $test-login, "Client sent login";
+    is $message.headers<passcode>, $test-password, "Client sent password";
+    ok $message.headers<accept-version>:exists, 'Client sent accept-version header';
+    is $message.body, "", "Client sent no message body";
+
+    $test-conn.receive-data: Stomp::Message.new(
+        command => 'CONNECTED',
+        headers => ( version => '1.2' )
+    );
+    ok (await $connect-promise), "CONNECTED message completes connection";
+}
