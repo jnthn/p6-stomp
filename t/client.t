@@ -2,7 +2,7 @@ use Test;
 use Test::IO::Socket::Async;
 use Stomp::Client;
 
-plan 10;
+plan 16;
 
 constant $test-host = 'localhost';
 constant $test-port = 1234;
@@ -63,4 +63,17 @@ my \TestableClient = Stomp::Client but role {
         headers => ( version => '1.2' )
     );
     ok (await $connect-promise), "CONNECTED message completes connection";
+
+    constant $test-destination = "/queue/shopping";
+    constant $test-body = "Buy a karahi!";
+    my $send-promise = $client.send($test-destination, $test-body);
+    $message-text = await $test-conn.sent-data;
+    $parsed-message = Stomp::Parser.parse($message-text);
+    ok $parsed-message, "send method sent well-formed message";
+    $message = $parsed-message.made;
+    is $message.command, "SEND", "message has SEND command";
+    is $message.headers<destination>, $test-destination, "destination header correct";
+    is $message.headers<content-type>, "text/plain", "has default content-type header";
+    is $message.body, $test-body, "message had expected body";
+    is $send-promise.status, Kept, "Promise retunred by send was kept";
 }

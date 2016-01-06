@@ -43,12 +43,12 @@ class Stomp::Client {
         IO::Socket::Async
     }
 
-    method send($topic, $body) {
+    method send($destination, $body) {
         self!ensure-connected;
         $!connection.print: Stomp::Message.new:
             command => 'SEND',
             headers => (
-                destination  => "/queue/$topic",
+                destination  => $destination,
                 content-type => "text/plain"
             ),
             body => $body;
