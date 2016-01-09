@@ -2,7 +2,7 @@ use Test;
 use Test::IO::Socket::Async;
 use Stomp::Client;
 
-plan 17;
+plan 26;
 
 constant $test-host = 'localhost';
 constant $test-port = 1234;
@@ -96,4 +96,13 @@ my \TestableClient = Stomp::Client but role {
     is $message.command, "SUBSCRIBE", "message has SUBSCRIBE command";
     is $message.headers<destination>, $test-destination, "destination header correct";
     ok $message.headers<id>:exists, "had an id header";
+
+    my $expected-id = $message.headers<id>;
+    $sub-tap.close;
+    $message-text = await $test-conn.sent-data;
+    $parsed-message = Stomp::Parser.parse($message-text);
+    ok $parsed-message, "unsubscribing sent well-formed message";
+    $message = $parsed-message.made;
+    is $message.command, "UNSUBSCRIBE", "message has UNSUBSCRIBE command";
+    is $message.headers<id>, $expected-id, "id matched the subscription";
 }

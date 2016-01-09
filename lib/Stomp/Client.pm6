@@ -60,6 +60,11 @@ class Stomp::Client {
             $!connection.print: Stomp::Message.new:
                 command => 'SUBSCRIBE',
                 headers => ( :$destination, :$id );
+            CLOSE {
+                $!connection.print: Stomp::Message.new:
+                    command => 'UNSUBSCRIBE',
+                    headers => ( :$id );
+            }
 
             whenever $!incoming {
                 if .command eq 'MESSAGE' && .headers<subscription> == $id {
