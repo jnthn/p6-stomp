@@ -51,7 +51,7 @@ class Stomp::Client {
             body => $body;
     }
 
-    method subscribe($topic) {
+    method subscribe($destination) {
         self!ensure-connected;
         state $next-id = 0;
         supply {
@@ -59,10 +59,7 @@ class Stomp::Client {
 
             $!connection.print: Stomp::Message.new:
                 command => 'SUBSCRIBE',
-                headers => (
-                    destination => "/queue/$topic",
-                    id => $id
-                );
+                headers => ( :$destination, :$id );
 
             whenever $!incoming {
                 if .command eq 'MESSAGE' && .headers<subscription> == $id {

@@ -82,4 +82,18 @@ my \TestableClient = Stomp::Client but role {
         content-type => $test-type);
     $message = Stomp::Parser.parse(await $test-conn.sent-data).made;
     is $message.headers<content-type>, $test-type, "can set content-type header";
+
+    my $sub-supply = $client.subscribe($test-destination);
+    isa-ok $sub-supply, Supply, "subscribe returns a Supply";
+    my $sent-data-promise = $test-conn.sent-data;
+    is $sent-data-promise.status, Planned, "did not yet send subscription request";
+    my @messages;
+    my $sub-tap = $sub-supply.tap({ @messages.push($_) });
+    $message-text = await $sent-data-promise;
+    $parsed-message = Stomp::Parser.parse($message-text);
+    ok $parsed-message, "subscribe method sent well-formed message";
+    $message = $parsed-message.made;
+    is $message.command, "SUBSCRIBE", "message has SUBSCRIBE command";
+    is $message.headers<destination>, $test-destination, "destination header correct";
+    ok $message.headers<id>:exists, "had an id header";
 }
