@@ -2,7 +2,7 @@ use Test;
 use Test::IO::Socket::Async;
 use Stomp::Client;
 
-plan 26;
+plan 31;
 
 constant $test-host = 'localhost';
 constant $test-port = 1234;
@@ -98,6 +98,17 @@ my \TestableClient = Stomp::Client but role {
     ok $message.headers<id>:exists, "had an id header";
 
     my $expected-id = $message.headers<id>;
+    is @messages.elems, 0, "no messages received yet";
+    $test-conn.receive-data: Stomp::Message.new(
+        command => 'MESSAGE',
+        headers => ( subscription => $expected-id ),
+        body    => $test-body
+    );
+    is @messages.elems, 1, "one message now received";
+    isa-ok @messages[0], Stomp::Message, "it's a Stomp::Message";
+    is @messages[0].command, "MESSAGE", "has the command MESSAGE";
+    is @messages[0].body, $test-body, "has the correct body";
+
     $sub-tap.close;
     $message-text = await $test-conn.sent-data;
     $parsed-message = Stomp::Parser.parse($message-text);

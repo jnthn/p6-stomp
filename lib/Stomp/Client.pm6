@@ -69,7 +69,7 @@ class Stomp::Client {
 
             whenever $!incoming {
                 if .command eq 'MESSAGE' && .headers<subscription> == $id {
-                    emit .body;
+                    emit $_;
                 }
             }
         }
