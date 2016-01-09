@@ -1,5 +1,6 @@
 use Stomp::Message;
 use Stomp::Parser;
+use Concurrent::Iterator;
 
 role X::Stomp::Client is Exception { }
 class X::Stomp::Client::NotConnected does X::Stomp::Client {
@@ -15,6 +16,7 @@ class Stomp::Client {
     has Str $.password = 'guest';
     has $!connection;
     has $!incoming;
+    has $!ids = concurrent-iterator(1..Inf);
 
     method connect() {
         start {
@@ -53,9 +55,8 @@ class Stomp::Client {
 
     method subscribe($destination) {
         self!ensure-connected;
-        state $next-id = 0;
         supply {
-            my $id = $next-id++;
+            my $id = $!ids.pull-one;
 
             $!connection.print: Stomp::Message.new:
                 command => 'SUBSCRIBE',
