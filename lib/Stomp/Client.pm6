@@ -1,5 +1,6 @@
 use Stomp::Message;
 use Stomp::Parser;
+use Stomp::MessageStream;
 use Concurrent::Iterator;
 
 role X::Stomp::Client is Exception { }
@@ -9,7 +10,7 @@ class X::Stomp::Client::NotConnected does X::Stomp::Client {
     }
 }
 
-class Stomp::Client {
+class Stomp::Client does Stomp::MessageStream[Stomp::Parser::ServerCommands] {
     has Str $.host is required;
     has Int $.port is required;
     has Str $.login = 'guest';
@@ -78,21 +79,5 @@ class Stomp::Client {
     method !ensure-connected() {
         die X::Stomp::Client::NotConnected.new
             unless $!connection
-    }
-
-    method !process-messages($incoming) {
-        supply {
-            my $buffer = '';
-            whenever $incoming -> $data {
-                $buffer ~= $data;
-                while Stomp::Parser::ServerCommands.subparse($buffer) -> $/ {
-                    given $/.made -> $message {
-                        die $message.body if $message.command eq 'ERROR';
-                        emit $message;
-                    }
-                    $buffer .= substr($/.chars);
-                }
-            }
-        }
     }
 }
