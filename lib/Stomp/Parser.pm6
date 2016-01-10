@@ -1,8 +1,15 @@
 use Stomp::Message;
 
+class X::Stomp::MalformedMessage is Exception {
+    has $.reason;
+    method message() {
+        "Malformed STOMP message: $!reason"
+    }
+}
+
 grammar Stomp::Parser {
     token TOP {
-        <command> \n
+        [ <command> \n || <.maybe-command> ]
         [<header> \n]*
         \n
         <body>
@@ -25,6 +32,13 @@ grammar Stomp::Parser {
     }
     token body {
         <-[\x0]>* )> \x0
+    }
+
+    token maybe-command {
+        <[A..Z]>**0..15 $ || <.malformed('invalid command')>
+    }
+    method malformed($reason) {
+        die X::Stomp::MalformedMessage.new(:$reason);
     }
 
     class Actions {
