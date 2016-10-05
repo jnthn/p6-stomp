@@ -30,7 +30,8 @@ for @server-commands {
 
         \0
         TEST
-throws-like { nok Stomp::Parser::ClientCommands.parse(qq:to/TEST/) }, X::Stomp::MalformedMessage,reason => 'invalid command', "Client parser rejects $_";
+
+    throws-like { nok Stomp::Parser::ClientCommands.parse(qq:to/TEST/) }, X::Stomp::MalformedMessage,reason => 'invalid command', "Client parser rejects $_";
         $_
 
         \0
@@ -43,6 +44,7 @@ for @client-commands {
 
         \0
         TEST
+
     throws-like { nok Stomp::Parser::ServerCommands.parse(qq:to/TEST/) }, X::Stomp::MalformedMessage,reason => 'invalid command', "Server parser rejects $_";
         $_
 
