@@ -28,7 +28,7 @@ grammar Stomp::Parser {
         <-[:\r\n]>+
     }
     token header-value {
-        <-[:\r\n]>*
+        <-[\r\n]>*
     }
     token body {
         <-[\x0]>* )> \x0
