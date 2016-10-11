@@ -1,0 +1,15 @@
+#!/usr/bin/env perl6
+
+use Stomp::Client;
+
+sub MAIN(:$login = 'guest', :$password = 'guest', :$port = 61613, :$host = 'localhost', :$queue = 'stomptest') {
+	my $client = Stomp::Client.new(:$login, :$password, :$port, :$host);
+
+	await $client.connect;
+
+	react {
+		whenever $client.subscribe($queue) -> $v {
+			say "Got : ",$v.body;
+		}
+	}
+}
