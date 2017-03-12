@@ -3,6 +3,8 @@ class Stomp::Message {
     has %.headers;
     has $.body = '';
 
+    has $!uuid;
+
     method Str() {
         qq:to/END/
             $!command
@@ -10,5 +12,10 @@ class Stomp::Message {
 
             $!body\0
             END
+    }
+
+    method uuid() returns Str {
+        use UUID;
+        $!uuid //= UUID.new.Str;
     }
 }
