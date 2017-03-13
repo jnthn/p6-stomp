@@ -2,7 +2,7 @@ use Test;
 use Test::IO::Socket::Async;
 use Stomp::Server;
 
-plan 22;
+plan 26;
 
 constant $test-socket = Test::IO::Socket::Async.new;
 my \TestableServer = Stomp::Server but role {
@@ -92,10 +92,20 @@ dies-ok { TestableServer.new(port => $test-port) }, "Must provide host and port 
             :$id,
         ));
 
+    my $match-message = Stomp::Message.new(
+        command => 'SEND',
+        headers => (
+            :$destination
+        ),
+        body    => 'Test Message'
+    );
+
     is $client-connection.subscriptions.elems, 1, "now have one subscription";
     is $client-connection.subscriptions.first.id, $id, "and it has the right id";
     is $client-connection.subscriptions.first.destination, $destination, "and it has the right destination";
     is $client-connection.subscriptions.first.ack, 'auto', "and the ack is 'auto'";
+    ok $match-message ~~ $client-connection.subscriptions.first , "subscription matches message to that destination";
+    ok $match-message ~~ $client-connection, "connection matches message to that destination";
     $test-conn.receive-data: Stomp::Message.new(
         command => 'UNSUBSCRIBE',
         headers => (
@@ -103,6 +113,8 @@ dies-ok { TestableServer.new(port => $test-port) }, "Must provide host and port 
             :$id,
         ));
     is $client-connection.subscriptions.elems, 0, "now have no subscription after unsubscribe";
+    ok $match-message !~~ $client-connection.subscriptions.first , "subscription no longer matches message to that destination";
+    ok $match-message !~~ $client-connection, "connection no longer matches message to that destination";
 
 }
 

@@ -1,5 +1,6 @@
 use Stomp::Parser;
 use Stomp::MessageStream;
+need Stomp::Message;
 
 class Stomp::Server {
     has Str $.host is required;
@@ -11,6 +12,10 @@ class Stomp::Server {
         has Str $.id            is required;
         has Str $.destination   is required;
         has AckMode $.ack = 'auto';
+
+        method ACCEPTS(Stomp::Message $mess) {
+            $!destination eq $mess.headers<destination>;
+        }
     }
 
     class Connection does Stomp::MessageStream[Stomp::Parser::ClientCommands] {
@@ -54,6 +59,12 @@ class Stomp::Server {
                 };
             }, :&quit;
         }
+
+        method ACCEPTS(Stomp::Message $mess) {
+            @!subscriptions.map(*.destination).any eq $mess.headers<destination>;
+        }
+
+
     }
 
     method listen() {
