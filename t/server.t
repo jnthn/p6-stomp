@@ -105,6 +105,7 @@ dies-ok { TestableServer.new(port => $test-port) }, "Must provide host and port 
     is $client-connection.subscriptions.first.destination, $destination, "and it has the right destination";
     is $client-connection.subscriptions.first.ack, 'auto', "and the ack is 'auto'";
     ok $match-message ~~ $client-connection.subscriptions.first , "subscription matches message to that destination";
+    ok $client-connection.subscription-for-message($match-message), "subscription-for-message";
     ok $match-message ~~ $client-connection, "connection matches message to that destination";
     $test-conn.receive-data: Stomp::Message.new(
         command => 'UNSUBSCRIBE',
