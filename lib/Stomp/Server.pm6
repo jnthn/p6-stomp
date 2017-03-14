@@ -25,8 +25,10 @@ class Stomp::Server {
         has  Subscription @.subscriptions;
         has  Lock $!subscription-lock;
 
+        has Supplier $!sent-message-supplier;
+
         submethod TWEAK {
-            $!messages = self!process-messages($!conn);
+            $!messages = self!process-messages($!conn.Supply).share;
 
             $!subscription-lock = Lock.new;
 
@@ -58,13 +60,40 @@ class Stomp::Server {
                     @!subscriptions = @!subscriptions.grep({ $_.id !~~ $id });
                 };
             }, :&quit;
+
+            $!sent-message-supplier = Supplier.new;
+            $!messages.grep({ $_.command ~~ 'SEND' }).tap: {
+                $!sent-message-supplier.emit: $_;
+            }, :&quit;
+        }
+
+        method sent-messages() returns Supply {
+            $!sent-message-supplier.Supply;
         }
 
         method ACCEPTS(Stomp::Message $mess) {
             @!subscriptions.map(*.destination).any eq $mess.headers<destination>;
         }
 
+        method subscription-for-message(Stomp::Message $mess) {
+            @!subscriptions.grep({$_.destination eq $mess.headers<destination>}).first;
+        }
 
+        method send(Stomp::Message $mess) {
+            if self.subscription-for-message($mess) -> $sub {
+                my $subscription = $sub.id;
+                my $message-id = $mess.uuid;
+                my $out = Stomp::Message.new(
+                    command => 'MESSAGE',
+                    body    => $mess.body,
+                    headers => (|$mess.headers, :$message-id, :$subscription, )
+                );
+                $!conn.print: $out;
+            }
+            else {
+                fail "Not subscribed to message";
+            }
+        }
     }
 
     method listen() {
