@@ -40,7 +40,7 @@ class Stomp::Server {
                 }
             };
 
-            my $connect-tap = $!messages.grep({ $_.command ~~ 'CONNECT'|'STOMP' }).tap: 
+            my $connect-tap = $!messages.grep({ $_.command ~~ 'CONNECT'|'STOMP' }).tap:
                     {
                         await $!conn.print: Stomp::Message.new:
                             command => 'CONNECTED',
@@ -49,7 +49,7 @@ class Stomp::Server {
                     }, :&quit;
             $!messages.grep({ $_.command ~~ 'SUBSCRIBE' }).tap: {
                 $!subscription-lock.protect: {
-                    @!subscriptions.push: Subscription.new( id          => $_.headers<id>, 
+                    @!subscriptions.push: Subscription.new( id          => $_.headers<id>,
                                                             destination => $_.headers<destination>,
                                                             ack         => $_.headers<ack> // 'auto' );
                 };
@@ -72,11 +72,15 @@ class Stomp::Server {
         }
 
         method ACCEPTS(Stomp::Message $mess) {
-            @!subscriptions.map(*.destination).any eq $mess.headers<destination>;
+            $!subscription-lock.protect({
+                @!subscriptions.map(*.destination).any eq $mess.headers<destination>;
+            });
         }
 
         method subscription-for-message(Stomp::Message $mess) {
-            @!subscriptions.grep({$_.destination eq $mess.headers<destination>}).first;
+            $!subscription-lock.protect({
+                @!subscriptions.first({ $_.destination eq $mess.headers<destination>});
+            });
         }
 
         method send(Stomp::Message $mess) {
