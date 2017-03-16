@@ -2,7 +2,7 @@ use Test;
 use Test::IO::Socket::Async;
 use Stomp::Server;
 
-plan 27;
+plan 28;
 
 constant $test-socket = Test::IO::Socket::Async.new;
 my \TestableServer = Stomp::Server but role {
@@ -107,6 +107,20 @@ dies-ok { TestableServer.new(port => $test-port) }, "Must provide host and port 
     ok $match-message ~~ $client-connection.subscriptions.first , "subscription matches message to that destination";
     ok $client-connection.subscription-for-message($match-message), "subscription-for-message";
     ok $match-message ~~ $client-connection, "connection matches message to that destination";
+
+    my $rec-message;
+    my $rec-promise = Promise.new;
+    $client-connection.published-messages.tap({
+            $rec-message = $_;
+            $rec-promise.keep: True;
+        });
+
+    $test-conn.receive-data: $match-message;
+
+    await Promise.anyof($rec-promise, Promise.in(5));
+
+    is $rec-message.body, $match-message.body, "got the message from published-messages";
+
     $test-conn.receive-data: Stomp::Message.new(
         command => 'UNSUBSCRIBE',
         headers => (

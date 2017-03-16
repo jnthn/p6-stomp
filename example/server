@@ -8,7 +8,7 @@ sub MAIN(:$port = 61613, :$host = 'localhost') {
     my $all-messages = Supplier.new;
     react {
         whenever $server.listen -> $v {
-            whenever $v.sent-messages -> $m {
+            whenever $v.published-messages -> $m {
                 $all-messages.emit: $m;
             }
             whenever $all-messages -> $m {

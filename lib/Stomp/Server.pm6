@@ -67,7 +67,7 @@ class Stomp::Server {
             }, :&quit;
         }
 
-        method sent-messages() returns Supply {
+        method published-messages() returns Supply {
             $!sent-message-supplier.Supply;
         }
 
