@@ -2,7 +2,7 @@ use Test;
 use Test::IO::Socket::Async;
 use Stomp::Server;
 
-plan 26;
+plan 27;
 
 constant $test-socket = Test::IO::Socket::Async.new;
 my \TestableServer = Stomp::Server but role {
