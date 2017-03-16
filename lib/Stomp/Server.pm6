@@ -6,12 +6,12 @@ class Stomp::Server {
     has Str $.host is required;
     has Int $.port is required;
 
-    subset AckMode of Str where 'auto'|'client'|'client-individual';
+    enum AckMode ( Auto => 'auto', Client => 'client', Individual => 'client-individual');
 
     class Subscription {
         has Str $.id            is required;
         has Str $.destination   is required;
-        has AckMode $.ack = 'auto';
+        has AckMode $.ack = Auto;
 
         method ACCEPTS(Stomp::Message $mess) {
             $!destination eq $mess.headers<destination>;
@@ -51,7 +51,7 @@ class Stomp::Server {
                 $!subscription-lock.protect: {
                     @!subscriptions.push: Subscription.new( id          => $_.headers<id>,
                                                             destination => $_.headers<destination>,
-                                                            ack         => $_.headers<ack> // 'auto' );
+                                                            ack         => $_.headers<ack> ?? AckMode($_.headers<ack>) !! Auto );
                 };
             }, :&quit;
             $!messages.grep({ $_.command ~~ 'UNSUBSCRIBE' }).tap: {
