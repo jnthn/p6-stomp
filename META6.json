@@ -1,0 +1,40 @@
+{
+  "name": "Stomp",
+  "source-url": "https://github.com/jnthn/p6-stomp.git",
+  "support": {
+    "source": "https://github.com/jnthn/p6-stomp.git",
+    "bugtracker" : "https://github.com/jnthn/p6-stomp/issues"
+  },
+  "perl": "6.c",
+  "resources": [
+  ],
+  "auth": "Jonathan Worthington",
+  "tags": [
+      "stomp",
+      "messaging",
+      "mq"
+  ],
+  "license": "Artistic-2.0",
+  "build-depends": [
+  ],
+  "test-depends": [
+      "Test::IO::Socket::Async"
+  ],
+  "depends": [
+      "UUID",
+      "Concurrent::Iterator"
+  ],
+  "provides": {
+      "Stomp::Message" : "lib/Stomp/Message.pm6",
+      "Stomp::Parser"  : "lib/Stomp/Parser.pm6",
+      "Stomp::MessageStream" : "lib/Stomp/MessageStream.pm6",
+      "Stomp::Client" : "lib/Stomp/Client.pm6",
+      "Stomp::Server" : "lib/Stomp/Server.pm6"
+  },
+  "version": "0.0.1",
+  "meta-version": "0",
+  "authors": [
+      "Jonathan Worthington"
+  ],
+  "description": "A Perl 6 STOMP (Simple Text Orientated Messaging Protocol) implementation"
+}
