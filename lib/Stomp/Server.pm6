@@ -26,11 +26,14 @@ class Stomp::Server {
         has  Lock $!subscription-lock;
 
         has Supplier $!sent-message-supplier;
+        has Promise $.connected;
 
         submethod TWEAK {
             $!messages = self!process-messages($!conn.Supply).share;
 
             $!subscription-lock = Lock.new;
+
+            $!connected = Promise.new;
 
             my &quit = {
                 when X::Stomp::MalformedMessage {
@@ -45,6 +48,7 @@ class Stomp::Server {
                         await $!conn.print: Stomp::Message.new:
                             command => 'CONNECTED',
                             headers => ( accept-version => '1.2' );
+                        $!connected.keep: True;
                         $connect-tap.close;
                     }, :&quit;
             $!messages.grep({ $_.command ~~ 'SUBSCRIBE' }).tap: {
@@ -104,7 +108,9 @@ class Stomp::Server {
         supply {
             whenever self.socket-provider.listen($!host, $!port) -> $conn {
                 my $connection = Connection.new(:$conn);
-                emit $connection;
+                whenever $connection.connected {
+                    emit $connection;
+                }
             }
         }
     }
