@@ -47,7 +47,7 @@ class Stomp::Server {
                     {
                         await $!conn.print: Stomp::Message.new:
                             command => 'CONNECTED',
-                            headers => ( accept-version => '1.2' );
+                            headers => ( version => '1.2' );
                         $!connected.keep: True;
                         $connect-tap.close;
                     }, :&quit;

@@ -56,7 +56,7 @@ dies-ok { TestableServer.new(port => $test-port) }, "Must provide host and port 
     ok $parsed-message, "Server responded to CONNECT with valid message";
     my $message = $parsed-message.made;
     is $message.command, "CONNECTED", "Server sent CONNECTED command";
-    ok $message.headers<accept-version>:exists, "Server sent accept-version header";
+    ok $message.headers<version>:exists, "Server sent version header";
     is $message.body, "", "Server sent no message body";
     isa-ok $client-connection, 'Stomp::Server::Connection', "and the tap received the correct object";
 }
