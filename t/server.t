@@ -46,9 +46,10 @@ dies-ok { TestableServer.new(port => $test-port) }, "Must provide host and port 
     $test-conn.receive-data: Stomp::Message.new(
         command => 'CONNECT',
         headers => (
-            login => $test-login,
-            passcode => $test-password,
-            accept-version => '1.2'
+            host            => 'localhost',
+            login           => $test-login,
+            passcode        => $test-password,
+            accept-version  => '1.2'
         ));
 
     my $message-text = await $test-conn.sent-data;
