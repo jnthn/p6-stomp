@@ -23,7 +23,7 @@ class Stomp::Server {
         has Supply $!messages;
 
         has  Subscription @.subscriptions;
-        has  Lock $!subscription-lock;
+        has  Lock::Async $!subscription-lock;
 
         has Supplier $!sent-message-supplier;
         has Promise $.connected;
@@ -31,7 +31,7 @@ class Stomp::Server {
         submethod TWEAK {
             $!messages = self!process-messages($!conn.Supply).share;
 
-            $!subscription-lock = Lock.new;
+            $!subscription-lock = Lock::Async.new;
 
             $!connected = Promise.new;
 
