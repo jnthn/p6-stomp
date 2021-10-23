@@ -1,0 +1,23 @@
+#!/usr/bin/env raku
+
+use Stomp::Server;
+
+sub MAIN(:$port = 61613, :$host = 'localhost') {
+    my $server = Stomp::Server.new(:$port, :$host);
+
+    my $all-messages = Supplier.new;
+    react {
+        whenever $server.listen -> $v {
+            whenever $v.published-messages -> $m {
+                $all-messages.emit: $m;
+            }
+            whenever $all-messages -> $m {
+                if $m ~~ $v {
+                    $v.send: $m;
+                }
+            }
+        }
+    }
+}
+
+# vim: ft=raku
